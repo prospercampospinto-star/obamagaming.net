@@ -1,4 +1,5 @@
-name = "obama-gaming"
+# wrangler.toml
+name = 'obamagaming'
 compatibility_date = "2025-12-10"
 
 [assets]
