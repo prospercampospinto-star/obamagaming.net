@@ -1,0 +1,9 @@
+name = "obama-gaming"
+compatibility_date = "2025-12-10"
+
+[assets]
+directory = "./src"
+
+[[routes]]
+pattern = "obamagaming.net"
+custom_domain = true
