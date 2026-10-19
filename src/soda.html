@@ -1,11 +1,26 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-soda!!!!!!
-<a href="index.html">yes</a>
-</body>
+<style>body { padding: 16px; background: var(--surface-1); }
+#vis-container { overflow: visible; }</style></head><body><svg style="position:absolute;width:0;height:0" aria-hidden="true">
+    <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </marker>
+    </defs>
+</svg><div id="vis-container"><h2 class="sr-only">Demo card showing the Content Views plugin's CSS rules applied to a sample event</h2>
+    <div style="max-width: 320px; background-color: #FFFFFF; margin-top: 1.2em; padding: 15px 18px; position: relative; overflow: hidden; border: 0.5px solid var(--border); border-radius: 12px;">
+        <div class="pt-cv-ifield" style="margin-bottom: 0;">
+            <h4 style="margin: 0 0 10px; font-size: 18px; font-weight: 400; color: #EC6607;">
+                <a href="#" style="color: #EC6607; text-decoration: none;">Résultats enquête CRAC</a>
+            </h4>
+            <div style="font-weight: 400; color: var(--text-primary); margin-bottom: 10px; font-size: 14px; line-height: 1.6;">
+                Aujourd'hui, les grands bouleversements qui s'annoncent nous remettent face à nos engagements fondamentaux...
+            </div>
+            <a href="#" style="display: inline-block; color: #fff; background: #5F285E; padding: 6px 12px; border-radius: 4px; font-size: 13px; margin: 0;">Lire la suite…</a>
+        </div>
+    </div>
+</div></body>
 </html>

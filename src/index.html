@@ -1,22 +1,209 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Events</title>
+
+    <style>
+        body {
+            background: #5c275b url("https://www.actespro.fr/wp-content/uploads/2019/03/deco-fond.png") no-repeat center top;
+            background-size: cover;
+        }
+
+        #events-container {
+            padding: 2.6rem 2.8rem;
+            display: grid;
+            gap: 1.2rem;
+            /*grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));*/
+            grid-template-columns: 1fr;
+            max-width: 825px;
+        }
+        .event-card {
+            display: flex;
+            align-items: center;
+            background: linear-gradient(135deg, #f4f4f4, #f4f4f4);
+            border-radius: 0px;
+            padding: 1.4rem 1.6rem;
+            transition: transform 0.25s ease, box-shadow 0.25s ease;
+        }
+        .event-text {
+            background: linear-gradient(135deg, #f4f4f4, #f4f4f4);
+            border-radius: 0px;
+            padding: 1.4rem 1.6rem;
+            min-width: 300px;
+            max-width: 500px;
+        }
+        .event-top { font-weight: 700; color: #191a1b; margin-bottom: 4px; }
+        .event-top .genre { font-weight: 600; color: #5c275b; }
+        .event-top a { color: #e16209; text-decoration: none; }
+        .event-title {
+            font-family: 'Roboto',serif;
+            font-size: 2rem;
+            color: #e16209;
+            line-height: 1.15;
+            margin: 10px 0 14px;
+        }
+        .event-title a { color: inherit; text-decoration: none; }
+        .event-datetime { font-weight: 700; margin: 4px 0; }
+        .event-place { margin: 2px 0; }
+        .event-address { font-style: italic; color: #5c275b; margin: 2px 0; }
+        .event-image {
+            width: 100%;
+            height: 300px;
+            object-fit: scale-down;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .event-card:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+        }
+    </style>
 </head>
+
 <body>
-my name
-<a href="obamna.html">
-<button>
-    my
-</button>
-</a>
-obama
+
+<div id="events-container">Loading events...</div>
 
 
-<a href="soda.html">escape</a>
+<script>
+    // google sheets headers
+    const FIELDS = {
+        idSpectacle: "Spectacle",
+        ID: "Event ID",
+        company: "Nom de la compagnie",
+        title: "Titre du spectacle",
+        place: "Lieu",
+        address: "Adresse",
+        date: "Date",
+        hour: "Heure",
+        genre: "Genre du spectacle",
+        titleLink: "Lien du spectacle",
+        companyLink: "Lien de la compagnie",
+        description: "Description",
+        approved: "Approved",
+        image: "Image"
+    };
 
-<img src="/assets/obama-triangle.gif">
+    const EVENTS_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSG8bVBz8Ex4x2Z5sW4tK-p5DU0ZZdTHdZvjSjrLgeO-7i6RYGfRg2-DEvl5goK18g_fOUhHI3C1GZ8/pub?gid=1439191084&single=true&output=csv";
+    const DATES_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSG8bVBz8Ex4x2Z5sW4tK-p5DU0ZZdTHdZvjSjrLgeO-7i6RYGfRg2-DEvl5goK18g_fOUhHI3C1GZ8/pub?gid=1957200651&single=true&output=csv";
 
+    function maybeLink(text, url) {
+        if (url && url.trim() !== "") {
+            if (!url.startsWith("https")) {
+                url = "https://" + url;
+            }
+            return `<a href="${url}" target="_blank">${text}</a>`;
+        }
+        return text;
+    }
+
+    function driveImageUrl(driveLink) {
+        if (!driveLink) return "";
+        const match = driveLink.match(/[-\w]{25,}/);
+        if (!match) return "";
+        const fileId = match[0];
+        return `https://drive.google.com/thumbnail?id=${fileId}&sz=w1000`;
+    }
+
+    function parseCsv(csvText) {
+        const rows = csvText.trim().split("\n").map(r => r.split(","));
+        const headers = rows[0].map(h => h.trim());
+        const dataRows = rows.slice(1);
+        const col = (row, name) => row[headers.indexOf(name)]?.trim();
+        return { dataRows, col };
+    }
+
+    class Event {
+        constructor(company, companyLink, title, titleLink, genre, imageUrl) {
+            this.company = company;
+            this.companyLink = companyLink;
+            this.title = title;
+            this.titleLink = titleLink;
+            this.genre = genre;
+            this.imageUrl = imageUrl;
+        }
+    }
+
+    const container = document.getElementById("events-container");
+
+    // Chained fetch to prevent race condition : first events, then dates
+    fetch(EVENTS_CSV_URL)
+        .then(res => res.text())
+        .then(csvText => {
+            const { dataRows, col } = parseCsv(csvText);
+            const Events = new Map();
+
+            const approvedEvents = dataRows.filter(row => col(row, FIELDS.approved)?.toUpperCase() === "TRUE");
+
+            // replace with approvedEvents if event check is active
+            dataRows.forEach(row => {
+                const id = col(row, FIELDS.ID);
+                Events.set(id, new Event(
+                    col(row, FIELDS.company),
+                    col(row, FIELDS.companyLink),
+                    col(row, FIELDS.title),
+                    col(row, FIELDS.titleLink),
+                    col(row, FIELDS.genre),
+                    driveImageUrl(col(row, FIELDS.image))
+                ));
+            });
+
+            return Events; // passed along to the next .then()
+        })
+        .then(Events => {
+            return fetch(DATES_CSV_URL)
+                .then(res => res.text())
+                .then(csvText => {
+                    const { dataRows, col } = parseCsv(csvText);
+                    // No "approved" column (already happened at the Event level)
+
+                    container.innerHTML = "";
+
+                    const approvedEvents = dataRows.filter(row => col(row, FIELDS.approved)?.toUpperCase() === "TRUE");
+
+                    approvedEvents.forEach(row => {
+                        const rawId = col(row, FIELDS.idSpectacle);
+                        if (!rawId) return; // skip blank rows
+
+                        const id = rawId.trim().split(/\s+/)[0];
+                        const event = Events.get(id);
+
+                        // guard against a missing/unapproved event (other events still load)
+                        if (!event) {
+                            console.warn("No matching event found for ID:", id);
+                            console.warn("Raw ID : ", rawId);
+                            return;
+                        }
+
+                        const date = col(row, FIELDS.date);
+                        const rawHour = col(row, FIELDS.hour);
+
+                        const hour = rawHour.split(":")[0] + ":" + rawHour.split(":")[1]; // hour formatting
+
+                        const place = col(row, FIELDS.place);
+                        const address = col(row, FIELDS.address);
+
+                        const card = document.createElement("div");
+                        card.className = "event-card";
+                        card.innerHTML = `<div class="event-text">
+                <div class="event-top">${maybeLink(event.company, event.companyLink)} / <span class="genre">${event.genre}</span></div>
+                <div class="event-title">${maybeLink(event.title, event.titleLink)}</div>
+                <p class="event-datetime">${date}, ${hour}</p>
+                <p class="event-place">${place}</p>
+                <p class="event-address">${address}</p>
+                </div>
+                ${event.imageUrl ? `<img src="${event.imageUrl}" class="event-image" alt="${event.title}">` : ""}
+              `;
+                        container.appendChild(card);
+                    });
+                });
+        })
+        .catch(err => {
+            console.error("Failed to load events:", err);
+            container.innerHTML = "Could not load events. Please try again later.";
+        });
+</script>
 </body>
 </html>

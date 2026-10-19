@@ -1,0 +1,45 @@
+.pt-cv-content-item {
+    background-color: #FFFFFF;
+    margin-top: 1.2em;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    position: relative;
+    overflow: hidden;
+}
+
+.pt-cv-ifield > *, .pt-cv-view .pt-cv-content-item > * {
+    margin-bottom: 10px;
+}
+
+.pt-cv-title {
+    margin-top: 0 !important;
+}
+.pt-cv-view .pt-cv-title {
+    margin-bottom: 10px;
+    color: #EC6607;
+}
+.pt-cv-title a {
+    font-weight: 400;
+    color: #EC6607;
+}
+
+.pt-cv-thumbnail {
+    height: auto;
+    max-width: 100% !important;
+    margin-bottom: 10px !important;
+    min-width: inherit !important;
+}
+.pt-cv-thumbnail.pull-right {
+    margin-left: 30px;
+    margin-top: 15px;
+}
+
+.pt-cv-content, .pt-cv-content * {
+    font-weight: 400;
+}
+
+.pt-cv-readmore {
+    color: #fff;
+    margin: 10px 0;
+    max-width: 100%;
+}
