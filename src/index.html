@@ -22,9 +22,9 @@
         .event-card {
             display: flex;
             align-items: center;
-            background: linear-gradient(135deg, #f4f4f4, #f4f4f4);
-            border-radius: 0px;
-            padding: 1.4rem 1.6rem;
+            background: linear-gradient(135deg, #f4f4f4, #ffffff);
+            border-radius: 1px;
+            padding: 2.4rem 2.6rem;
             transition: transform 0.25s ease, box-shadow 0.25s ease;
         }
         .event-text {
@@ -108,9 +108,35 @@
     }
 
     function parseCsv(csvText) {
-        const rows = csvText.trim().split("\n").map(r => r.split(","));
+        const rows = [];
+        let row = [], field = "", inQuotes = false;
+
+        for (let i = 0; i < csvText.length; i++) {
+            const c = csvText[i];
+
+            if (inQuotes) {
+                if (c === '"') {
+                    if (csvText[i + 1] === '"') { field += '"'; i++; } // escaped quote ""
+                    else inQuotes = false;
+                } else {
+                    field += c; // commas and newlines inside quotes are kept
+                }
+            } else if (c === '"') {
+                inQuotes = true;
+            } else if (c === ",") {
+                row.push(field); field = "";
+            } else if (c === "\n" || c === "\r") {
+                if (c === "\r" && csvText[i + 1] === "\n") i++;
+                row.push(field); rows.push(row);
+                row = []; field = "";
+            } else {
+                field += c;
+            }
+        }
+        if (field !== "" || row.length) { row.push(field); rows.push(row); }
+
         const headers = rows[0].map(h => h.trim());
-        const dataRows = rows.slice(1);
+        const dataRows = rows.slice(1).filter(r => r.some(cell => cell.trim() !== ""));
         const col = (row, name) => row[headers.indexOf(name)]?.trim();
         return { dataRows, col };
     }
@@ -138,7 +164,7 @@
             const approvedEvents = dataRows.filter(row => col(row, FIELDS.approved)?.toUpperCase() === "TRUE");
 
             // replace with approvedEvents if event check is active
-            dataRows.forEach(row => {
+            approvedEvents.forEach(row => {
                 const id = col(row, FIELDS.ID);
                 Events.set(id, new Event(
                     col(row, FIELDS.company),
@@ -149,6 +175,10 @@
                     driveImageUrl(col(row, FIELDS.image))
                 ));
             });
+
+            console.log("loaded events");
+            console.log(Events.keys().toArray());
+            console.log(Events.values().toArray());
 
             return Events; // passed along to the next .then()
         })
@@ -163,11 +193,11 @@
 
                     const approvedEvents = dataRows.filter(row => col(row, FIELDS.approved)?.toUpperCase() === "TRUE");
 
-                    approvedEvents.forEach(row => {
+                    dataRows.forEach(row => {
                         const rawId = col(row, FIELDS.idSpectacle);
                         if (!rawId) return; // skip blank rows
 
-                        const id = rawId.trim().split(/\s+/)[0];
+                        const id = rawId.trim().split(" ")[0];
                         const event = Events.get(id);
 
                         // guard against a missing/unapproved event (other events still load)
@@ -180,7 +210,7 @@
                         const date = col(row, FIELDS.date);
                         const rawHour = col(row, FIELDS.hour);
 
-                        const hour = rawHour.split(":")[0] + ":" + rawHour.split(":")[1]; // hour formatting
+                        const hour = rawHour ? rawHour.split(":")[0] + ":" + rawHour.split(":")[1] : ""; // hour formatting
 
                         const place = col(row, FIELDS.place);
                         const address = col(row, FIELDS.address);
